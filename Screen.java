@@ -17,15 +17,18 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Screen extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
-    public Screen() {
+    private Board board;
 
+    public Screen() {
+        board = new Board(9, 9);
     }
 
 	public Dimension getPreferredSize(){
 		return new Dimension(800,600);
-		
 	}
 
 	public void paintComponent(Graphics g){

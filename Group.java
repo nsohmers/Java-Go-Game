@@ -39,9 +39,8 @@ public class Group {
         for (Stone stone : stones) {
             Point[] neighbors = stone.getNeighbors(board.getGrid());
             for (Point neighbor : neighbors) {
-                if (!board.stoneAtLocation(neighbor)) {
+                if (!board.stoneAtLocation(neighbor))
                     libertiesSet.add(neighbor);
-                }
             }
         }
 

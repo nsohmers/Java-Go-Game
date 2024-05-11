@@ -22,18 +22,27 @@ public class Board {
     public Board(int boardHeight, int boardWidth) {
         grid = new Point[boardHeight][boardWidth];
 
-        Stone.numberOfRows = boardHeight;
-        Stone.numberOfCols = boardWidth;
-
         stonePool = new HashMap<Point, Stone>();
         groups = new ArrayList<Group>();
 
-        for (int r = 0; r > grid.length; r++) {
-            for (int c = 0; c > grid[r].length; c++) {
+        for (int r = 0; r <  grid.length; r++) {
+            for (int c = 0; c < grid[r].length; c++) {
                 grid[r][c] = new Point(r, c);
                 stonePool.put(grid[r][c], null);
             }
         }
+    }
+
+    public Point[][] getGrid() {
+        return grid;
+    }
+
+    public StoneColor currentColor() {
+        return ((currentTurn % 2 == 1) ? StoneColor.BLACK : StoneColor.WHITE);
+    }
+
+    public int currentTurn() {
+        return currentTurn;
     }
 
     public boolean stoneAtLocation(int row, int col) {
@@ -52,16 +61,19 @@ public class Board {
         return false;
     }
 
-    public Point[][] getGrid() {
-        return grid;
-    }
+    public HashMap<Point, StoneColor> getPointColorHash() {
+        HashMap<Point, StoneColor> result = new HashMap<Point, StoneColor>();
 
-    public StoneColor currentColor() {
-        return ((currentTurn % 2 == 1) ? StoneColor.BLACK : StoneColor.WHITE);
-    }
+        for (HashMap.Entry<Point, Stone> entry : stonePool.entrySet()) {
+            Point point = entry.getKey();
+            Stone stone = entry.getValue();
 
-    public int currentTurn() {
-        return currentTurn;
+            if (stone != null) {
+                result.put(point, stone.getColor());
+            }
+        }
+
+        return result;
     }
 
     public void addStone(int row, int col) {
@@ -69,7 +81,10 @@ public class Board {
         if (stoneAtLocation(row, col))
             return;
 
-        Stone stone = new Stone(grid[row][col], currentColor());
+        // reference to point the stone will be on
+        Point point = grid[row][col];
+
+        Stone stone = new Stone(point, currentColor());
 
         // create a new group for the stone
         Group current = new Group(stone, this);
@@ -90,7 +105,7 @@ public class Board {
             // if the point is one of these surrounding the
             // group set "touching" to true
             for (Point liberty : liberties) {
-                if (liberty.equals(grid[row][col])) {
+                if (liberty.equals(point)) {
                     touching = true;
                 }
             }
@@ -109,14 +124,16 @@ public class Board {
 
         // if the current liberties are zero remove the current 
         // group and add back the ones we removed
+        // TODO: if leberties are zero but it removes another
+        // group then allow for it to be put down
         if (current.getLiberties().size() == 0) {
             groups.addAll(removedGroups);
             return;
         }
 
         // add the stone to the grid
-        stonePool.remove(grid[row][col], null);
-        stonePool.put(grid[row][col], stone);
+        stonePool.remove(point, null);
+        stonePool.put(point, stone);
 
         // add the new group to groups
         groups.add(current);

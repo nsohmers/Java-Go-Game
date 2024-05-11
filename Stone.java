@@ -6,7 +6,6 @@ enum StoneColor {
 public class Stone {
     private Point point;
     private StoneColor color;
-    public static int numberOfRows, numberOfCols;
 
     public Stone(Point point, StoneColor color) {
         this.point = point;
@@ -25,37 +24,35 @@ public class Stone {
         int row = point.getRow();
         int col = point.getCol();
 
-        Point left = grid[row - 1][col];
-        Point right = grid[row + 1][ col];
-        Point down = grid[row][col - 1];
-        Point up = grid[row][col + 1];
+        int numberOfRows = grid.length;
+        int numberOfCols = grid[0].length;
 
         if ( row > 0 && row < numberOfRows - 1 && col > 0 && col < numberOfCols - 1 ) {
-            Point[] neighbors = {left, right, down, up};
+            Point[] neighbors = {grid[row][col - 1], grid[row][col + 1], grid[row + 1][col], grid[row - 1][col]};
             return neighbors;
         } else if ( row == 0 && col > 0 && col < numberOfCols - 1 ) {
-            Point[] neighbors = {left, right, down};
+            Point[] neighbors = {grid[row][col - 1], grid[row][col + 1], grid[row + 1][col]};
             return neighbors;
         } else if ( row == numberOfRows - 1 && col > 0 && col < numberOfCols - 1 ) {
-            Point[] neighbors = {left, right, up};
+            Point[] neighbors = {grid[row][col - 1], grid[row][col + 1], grid[row - 1][col]};
             return neighbors;
         } else if ( row > 0 && row < numberOfRows - 1 && col == 0) {
-            Point[] neighbors = {right, up, down};
+            Point[] neighbors = {grid[row][col + 1], grid[row - 1][col], grid[row + 1][col]};
             return neighbors;
         } else if ( row > 0 && row < numberOfRows - 1 && col == numberOfCols - 1 ) {
-            Point[] neighbors = {left, up, down};
+            Point[] neighbors = {grid[row][col - 1], grid[row - 1][col], grid[row + 1][col]};
             return neighbors;
         } else if (row == 0 && col == 0) {
-            Point[] neighbors = {right, down};
+            Point[] neighbors = {grid[row][col + 1], grid[row + 1][col]};
             return neighbors;
         } else if (row == 0 && col == numberOfCols - 1) {
-            Point[] neighbors = {left, down};
+            Point[] neighbors = {grid[row][col - 1], grid[row + 1][col]};
             return neighbors;
         } else if (row == numberOfRows - 1 && col == 0) {
-            Point[] neighbors = {right, up};
+            Point[] neighbors = {grid[row][col + 1], grid[row - 1][col]};
             return neighbors;
         } else if (row == numberOfRows - 1 && col == numberOfCols - 1) {
-            Point[] neighbors = {left, up};
+            Point[] neighbors = {grid[row][col - 1], grid[row - 1][col]};
             return neighbors;
         } else {
             System.out.println("Error calculating neighbors");
