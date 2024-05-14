@@ -21,8 +21,7 @@ public class Board {
     private static ArrayList<Group> groups;
 
     // Used to ensure Ko rule
-    private static HashMap<Point, StoneColor> prev_white_board;
-    private static HashMap<Point, StoneColor> prev_black_board;
+    private static HashMap<Point, StoneColor> previousBoard;
 
     public Board(int boardHeight, int boardWidth) {
         grid = new Point[boardHeight][boardWidth];
@@ -31,8 +30,7 @@ public class Board {
 
         groups = new ArrayList<Group>();
 
-        prev_white_board = new HashMap<Point, StoneColor>();
-        prev_black_board = new HashMap<Point, StoneColor>();
+        previousBoard = new HashMap<Point, StoneColor>();
 
         for (int r = 0; r <  grid.length; r++) {
             for (int c = 0; c < grid[r].length; c++) {
@@ -108,19 +106,12 @@ public class Board {
     // if it does it will return true
     private boolean checkKoRule() {
         HashMap<Point, StoneColor> current = getPointColor();
-        HashMap<Point, StoneColor> prev = (currentColor() == StoneColor.BLACK)
-                                          ? prev_black_board : prev_white_board;
 
-
-        if (prev.equals(current)) {
+        if (previousBoard.equals(current)) {
             return true;
         }
 
-        if (currentColor() == StoneColor.BLACK) {
-            prev_black_board = current;
-        } else {
-            prev_white_board = current;
-        }
+        previousBoard = current;
 
         return false;
     }
