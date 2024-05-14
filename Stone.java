@@ -20,6 +20,9 @@ public class Stone {
         return color;
     }
 
+    // TODO: Move this to Point class
+    // and make Stone extend Point
+    // (therfore can use this function)
     public Point[] getNeighbors(Point[][] grid) {
         int row = point.getRow();
         int col = point.getCol();

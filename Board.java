@@ -61,6 +61,23 @@ public class Board {
         return false;
     }
 
+    // check to see if any groups of opposite
+    // color lose all their liberties
+    private boolean otherGroupLosesLiberties() {
+        StoneColor other = (currentColor() != StoneColor.BLACK) ? StoneColor.BLACK : StoneColor.WHITE;
+
+        for (Group group : groups) {
+            if (group.getGroupColor() == other && group.getNumLiberties() == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // this is a function that returns a hash map with all points
+    // and their corresponding color; solely needed for
+    // the front-end to know where/how to draw stones
     public HashMap<Point, StoneColor> getPointColorHash() {
         HashMap<Point, StoneColor> result = new HashMap<Point, StoneColor>();
 
@@ -76,10 +93,14 @@ public class Board {
         return result;
     }
 
-    public void addStone(int row, int col) {
+    // TODO: Add check that board can't repeat into previous state
+    // use the point-color hash for this
+
+    // returns true if stone is placed, otherwise returns false
+    public boolean addStone(int row, int col) {
         // check there are no stones already there
         if (stoneAtLocation(row, col))
-            return;
+            return false;
 
         // reference to point the stone will be on
         Point point = grid[row][col];
@@ -122,23 +143,45 @@ public class Board {
             // new stone will be merged into one group
         }
 
-        // if the current liberties are zero remove the current 
-        // group and add back the ones we removed
-        // TODO: if leberties are zero but it removes another
-        // group then allow for it to be put down
-        if (current.getLiberties().size() == 0) {
-            groups.addAll(removedGroups);
-            return;
-        }
-
-        // add the stone to the grid
-        stonePool.remove(point, null);
+        // Add the stone to the grid
+        // (this is needed to check if other groups lose liberties)
         stonePool.put(point, stone);
+
+        // if the current liberties are zero and any of the other groups
+        // don't lose all of their liberties remove the current 
+        // group and add back the ones we removed
+        if (current.getNumLiberties() == 0 && !otherGroupLosesLiberties()) {
+            stonePool.put(point, null);
+            groups.addAll(removedGroups);
+            return false;
+        }
 
         // add the new group to groups
         groups.add(current);
 
         // increment the current turn by one
         currentTurn++;
+
+        return true;
+    }
+
+    public void updateStones() {
+        // Loop through every group
+        for (int i = 0; i < groups.size(); i++) {
+            Group group = groups.get(i);
+
+            // Check if the group has zero liberties
+            if (group.getNumLiberties() == 0) {
+                // if it does then loop through its stones
+                // and set their corresponding points to null
+                for (Stone stone : group.getStones()) {
+                    stonePool.put(stone.getPoint(), null);
+                }
+
+                // then remove the group
+                groups.remove(i);
+                i--;
+            }
+        }
     }
 }

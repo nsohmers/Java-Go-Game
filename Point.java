@@ -25,4 +25,8 @@ public class Point {
         }
         return false;
     }
+
+    public String toString() {
+        return "(" + row + ", " + col + ")";
+    }
 }
