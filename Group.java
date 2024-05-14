@@ -20,10 +20,15 @@ public class Group {
         return stones;
     }
 
+    public int getNumLiberties() {
+        return getLiberties().size();
+    }
+
     public StoneColor getGroupColor() {
         return groupColor;
     }
 
+    // function used to merge with another group
     public void merge(Group other) {
         if (other.getGroupColor() == groupColor) {
             stones.removeAll(other.getStones());
@@ -33,6 +38,9 @@ public class Group {
             System.out.println("Error, two groups were merged with different colors");
     }
 
+    // returns all liberties of a group;
+    // linked hash set is used to remove all
+    // repeating references to the same point
     public ArrayList<Point> getLiberties() {
         LinkedHashSet<Point> libertiesSet = new LinkedHashSet<Point>();
 
