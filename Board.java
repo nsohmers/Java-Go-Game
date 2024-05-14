@@ -151,19 +151,11 @@ public class Board {
 
             // this is the list of points that surrounds the group
             ArrayList<Point> liberties = groups.get(i).getLiberties();
-            boolean touching = false;
 
-            // if the point is one of these surrounding the
-            // group set "touching" to true
-            for (Point liberty : liberties) {
-                if (liberty.equals(point)) {
-                    touching = true;
-                }
-            }
-
-            // if the stone is touching the group merge the groups
+            // if the stone is one of the groups liberties
+            // (touching the group) merge the groups
             // and delete the old group
-            if (touching) {
+            if (liberties.contains(point)) {
                 removedGroups.add(groups.get(i));
                 current.merge(groups.remove(i));
                 i--;
@@ -174,11 +166,13 @@ public class Board {
         }
 
         // Add the stone to the grid
-        // (this is needed to check if other groups lose liberties)
+        // (this is needed to check if other groups
+        // lose liberties and for the ko rule)
         stonePool.put(point, stone);
 
-        // if the current liberties are zero and any of the other groups
-        // don't lose all of their liberties remove the current 
+        // if the board repeats itself, or if the current liberties 
+        // are zero and any of the other groups
+        // don't lose all of their liberties, remove the current 
         // group and add back the ones we removed
         if (checkKoRule() || current.getNumLiberties() == 0 && !otherGroupLosesLiberties()) {
             stonePool.put(point, null);
