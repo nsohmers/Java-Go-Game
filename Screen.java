@@ -63,7 +63,7 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
 
         Graphics2D g2 = (Graphics2D) g;
 
-        g2.setStroke(new BasicStroke(4));
+        g2.setStroke(new BasicStroke(5.2f));
 
         for (int i = 0; i < NUMROWS; i++) {
             int rowY = topMargin + (rowGap) * i;
@@ -78,11 +78,12 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
         }
     }
 
-    private void drawStone(Point point, StoneColor stoneColor, Graphics g) {
+    private void drawStone(Stone stone, Graphics g) {
+        StoneColor stoneColor = stone.getColor();
         Color color = (stoneColor == StoneColor.BLACK) ? blackStone : whiteStone;
 
-        int stoneX = (leftMargin + colGap * point.getCol()) - colGap / 2;
-        int stoneY = (topMargin + rowGap * point.getRow()) - rowGap / 2;
+        int stoneX = (leftMargin + colGap * stone.getCol()) - colGap / 2;
+        int stoneY = (topMargin + rowGap * stone.getRow()) - rowGap / 2;
 
         g.setColor(color);
 
@@ -90,8 +91,8 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
     }
 
     private void drawStones(Graphics g) {
-        for (HashMap.Entry<Point, StoneColor> entry : board.getPointColorHash().entrySet()) {
-            drawStone(entry.getKey(), entry.getValue(), g);
+        for (Stone stone : board.getStones()) {
+            drawStone(stone, g);
         }
     }
 
@@ -123,8 +124,6 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
             return;
         else if (col > NUMCOLS - 1)
             return;
-
-        System.out.println("Row: " + row + "\tCol: " + col);
 
         if (board.addStone(row, col)) {
             board.updateStones();

@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class Board {
     // This is the grid representing the board in Go
@@ -19,11 +20,19 @@ public class Board {
     // adjacent stones are in the same group
     private static ArrayList<Group> groups;
 
+    // Used to ensure Ko rule
+    private static HashMap<Point, StoneColor> prev_white_board;
+    private static HashMap<Point, StoneColor> prev_black_board;
+
     public Board(int boardHeight, int boardWidth) {
         grid = new Point[boardHeight][boardWidth];
 
         stonePool = new HashMap<Point, Stone>();
+
         groups = new ArrayList<Group>();
+
+        prev_white_board = new HashMap<Point, StoneColor>();
+        prev_black_board = new HashMap<Point, StoneColor>();
 
         for (int r = 0; r <  grid.length; r++) {
             for (int c = 0; c < grid[r].length; c++) {
@@ -33,16 +42,16 @@ public class Board {
         }
     }
 
+    public int currentTurn() {
+        return currentTurn;
+    }
+
     public Point[][] getGrid() {
         return grid;
     }
 
     public StoneColor currentColor() {
         return ((currentTurn % 2 == 1) ? StoneColor.BLACK : StoneColor.WHITE);
-    }
-
-    public int currentTurn() {
-        return currentTurn;
     }
 
     public boolean stoneAtLocation(int row, int col) {
@@ -61,6 +70,26 @@ public class Board {
         return false;
     }
 
+    // Returns all current Stones
+    public ArrayList<Stone> getStones() {
+        ArrayList<Stone> result = new ArrayList<Stone>(stonePool.values());
+        result.removeIf(Objects::isNull);
+        return result;
+    }
+
+    // used to ensure Ko rule
+    // returns a hashmap with points as keys
+    // and stone colors as values
+    private HashMap<Point, StoneColor> getPointColor() {
+        HashMap<Point, StoneColor> result = new HashMap<Point, StoneColor>();
+
+        for (Stone stone : getStones()) {
+            result.put(stone.getPoint(grid), stone.getColor());
+        }
+
+        return result;
+    }
+
     // check to see if any groups of opposite
     // color lose all their liberties
     private boolean otherGroupLosesLiberties() {
@@ -75,26 +104,26 @@ public class Board {
         return false;
     }
 
-    // this is a function that returns a hash map with all points
-    // and their corresponding color; solely needed for
-    // the front-end to know where/how to draw stones
-    public HashMap<Point, StoneColor> getPointColorHash() {
-        HashMap<Point, StoneColor> result = new HashMap<Point, StoneColor>();
+    // Checks that the board did not repeat itself
+    // if it does it will return true
+    private boolean checkKoRule() {
+        HashMap<Point, StoneColor> current = getPointColor();
+        HashMap<Point, StoneColor> prev = (currentColor() == StoneColor.BLACK)
+                                          ? prev_black_board : prev_white_board;
 
-        for (HashMap.Entry<Point, Stone> entry : stonePool.entrySet()) {
-            Point point = entry.getKey();
-            Stone stone = entry.getValue();
 
-            if (stone != null) {
-                result.put(point, stone.getColor());
-            }
+        if (prev.equals(current)) {
+            return true;
         }
 
-        return result;
-    }
+        if (currentColor() == StoneColor.BLACK) {
+            prev_black_board = current;
+        } else {
+            prev_white_board = current;
+        }
 
-    // TODO: Add check that board can't repeat into previous state
-    // use the point-color hash for this
+        return false;
+    }
 
     // returns true if stone is placed, otherwise returns false
     public boolean addStone(int row, int col) {
@@ -105,6 +134,7 @@ public class Board {
         // reference to point the stone will be on
         Point point = grid[row][col];
 
+        // create Stone object
         Stone stone = new Stone(point, currentColor());
 
         // create a new group for the stone
@@ -150,7 +180,7 @@ public class Board {
         // if the current liberties are zero and any of the other groups
         // don't lose all of their liberties remove the current 
         // group and add back the ones we removed
-        if (current.getNumLiberties() == 0 && !otherGroupLosesLiberties()) {
+        if (checkKoRule() || current.getNumLiberties() == 0 && !otherGroupLosesLiberties()) {
             stonePool.put(point, null);
             groups.addAll(removedGroups);
             return false;
@@ -175,7 +205,7 @@ public class Board {
                 // if it does then loop through its stones
                 // and set their corresponding points to null
                 for (Stone stone : group.getStones()) {
-                    stonePool.put(stone.getPoint(), null);
+                    stonePool.put(stone.getPoint(grid), null);
                 }
 
                 // then remove the group
