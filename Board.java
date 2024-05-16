@@ -68,6 +68,18 @@ public class Board {
         return false;
     }
 
+    public TerritoryType territoryAt(Point point) {
+        if (stonePool.get(point) == null) {
+            return TerritoryType.UNKNOWN;
+        }
+
+        if (stonePool.get(point).getColor() == StoneColor.BLACK) {
+            return TerritoryType.BLACK;
+        }
+
+        return TerritoryType.WHITE;
+    }
+
     // Returns all current Stones
     public ArrayList<Stone> getStones() {
         ArrayList<Stone> result = new ArrayList<Stone>(stonePool.values());
@@ -198,5 +210,54 @@ public class Board {
                 i--;
             }
         }
+    }
+
+    public ArrayList<Territory> getTerritories() {
+        ArrayList<Territory> territories = new ArrayList<Territory>();
+
+        for (int r = 0; r < grid.length; r++) {
+            for (int c = 0; c < grid.length; c++) {
+                Point point = grid[r][c];
+
+                if (stoneAtLocation(point))
+                    continue;
+
+                boolean already_found = false;
+
+                for (Territory territory : territories) {
+                    if (territory.hasPoint(point)) {
+                        already_found = true;
+                        break;
+                    }
+                }
+
+                if (already_found)
+                    continue;
+
+                territories.add(new Territory(point, this));
+            }
+        }
+
+        return territories;
+    }
+
+    public int getTeamScore(StoneColor color) {
+        TerritoryType type = (color == StoneColor.BLACK)
+                            ? TerritoryType.BLACK : TerritoryType.WHITE;
+        int counter = 0;
+
+        for (Territory territory : getTerritories()) {
+            if (territory.getType() == type) {
+                counter += territory.getNumPoints();
+            }
+        }
+
+        for (StoneColor otherColor : getPointColor().values()) {
+            if (color == otherColor) {
+                counter++;
+            }
+        }
+
+        return counter;
     }
 }
