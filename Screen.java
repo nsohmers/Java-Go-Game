@@ -25,16 +25,17 @@ import java.util.HashMap;
 public class Screen extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
     private Board board;
 
-    private static final int gameWidth = 800;
-    private static final int gameHeight = 800;
+    private static final int gameWidth = 900;
+    private static final int gameHeight = 900;
 
     private static int NUMROWS = 9;
     private static int NUMCOLS = 9;
 
-    private static int leftMargin = 60;
-    private static int rightMargin = 60;
-    private static int topMargin = 60;
-    private static int bottomMargin = 60;
+    private static int leftMargin = 90;
+    private static int rightMargin = 90;
+    private static int topMargin = 90;
+    private static int bottomMargin = 90;
+    private static float lineThickness = 5.5f;
 
     private static final int rowGap = (gameWidth - leftMargin - rightMargin) / (NUMROWS - 1);
     private static final int colGap = (gameHeight - topMargin - bottomMargin) / (NUMCOLS - 1);
@@ -63,7 +64,7 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
 
         Graphics2D g2 = (Graphics2D) g;
 
-        g2.setStroke(new BasicStroke(5.2f));
+        g2.setStroke(new BasicStroke(lineThickness));
 
         for (int i = 0; i < NUMROWS; i++) {
             int rowY = topMargin + (rowGap) * i;

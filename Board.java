@@ -69,18 +69,6 @@ public class Board {
         return false;
     }
 
-    public TerritoryType territoryAt(Point point) {
-        if (stonePool.get(point) == null) {
-            return TerritoryType.UNKNOWN;
-        }
-
-        if (stonePool.get(point).getColor() == StoneColor.BLACK) {
-            return TerritoryType.BLACK;
-        }
-
-        return TerritoryType.WHITE;
-    }
-
     // Returns all current Stones
     public ArrayList<Stone> getStones() {
         ArrayList<Stone> result = new ArrayList<Stone>(stonePool.values());
@@ -127,6 +115,19 @@ public class Board {
         previousBoards.add(current);
 
         return false;
+    }
+
+    // returns what type of territory is at a specified point
+    public TerritoryType territoryAt(Point point) {
+        if (stonePool.get(point) == null) {
+            return TerritoryType.UNKNOWN;
+        }
+
+        if (stonePool.get(point).getColor() == StoneColor.BLACK) {
+            return TerritoryType.BLACK;
+        }
+
+        return TerritoryType.WHITE;
     }
 
     // returns true if stone is placed, otherwise returns false
@@ -213,18 +214,27 @@ public class Board {
         }
     }
 
+    // used to create an array list of territories
+    // territories are groups of points with no stones
+    // that are adjacent to each other
+    // a territory can be "black" or "white"
+    // depending on if it is solely surronded by one color
     public ArrayList<Territory> getTerritories() {
+        // make the array list
         ArrayList<Territory> territories = new ArrayList<Territory>();
 
+        // loop through every point in the 2D array
         for (int r = 0; r < grid.length; r++) {
             for (int c = 0; c < grid.length; c++) {
                 Point point = grid[r][c];
 
+                // if there is a stone there skip it
                 if (stoneAtLocation(point))
                     continue;
 
                 boolean already_found = false;
 
+                // find out if the point is already part of a territory
                 for (Territory territory : territories) {
                     if (territory.hasPoint(point)) {
                         already_found = true;
@@ -232,16 +242,22 @@ public class Board {
                     }
                 }
 
+                // if it is skip it
                 if (already_found)
                     continue;
 
+                // create a new territory that starts at the point
+                // and add it to territories
                 territories.add(new Territory(point, this));
             }
         }
 
+        // return the array list
         return territories;
     }
 
+    // Used to calculate a team's score
+    // May be deleted/opimized later
     public int getTeamScore(StoneColor color) {
         TerritoryType type = (color == StoneColor.BLACK)
                             ? TerritoryType.BLACK : TerritoryType.WHITE;
