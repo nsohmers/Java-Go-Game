@@ -148,5 +148,4 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
 
     @Override
     public void mouseClicked(MouseEvent e) {}
-
 }

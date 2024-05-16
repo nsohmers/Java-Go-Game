@@ -20,8 +20,9 @@ public class Board {
     // adjacent stones are in the same group
     private static ArrayList<Group> groups;
 
-    // Used to ensure Ko rule
-    private static HashMap<Point, StoneColor> previousBoard;
+    // Hash codes used to ensure Super Ko rule
+    // Meaning that the board can never repeat itself
+    private static ArrayList<Integer> previousBoards;
 
     public Board(int boardHeight, int boardWidth) {
         grid = new Point[boardHeight][boardWidth];
@@ -30,7 +31,7 @@ public class Board {
 
         groups = new ArrayList<Group>();
 
-        previousBoard = new HashMap<Point, StoneColor>();
+        previousBoards = new ArrayList<Integer>();
 
         for (int r = 0; r <  grid.length; r++) {
             for (int c = 0; c < grid[r].length; c++) {
@@ -114,16 +115,16 @@ public class Board {
         return false;
     }
 
-    // Checks that the board did not repeat itself
+    // Checks that the board never repeats itself
     // if it does it will return true
     private boolean checkKoRule() {
-        HashMap<Point, StoneColor> current = getPointColor();
+        int current = getPointColor().hashCode();
 
-        if (previousBoard.equals(current)) {
+        if (previousBoards.contains(current)) {
             return true;
         }
 
-        previousBoard = current;
+        previousBoards.add(current);
 
         return false;
     }
