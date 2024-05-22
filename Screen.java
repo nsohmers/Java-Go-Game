@@ -164,14 +164,11 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
     }
 
     private void drawStones(Graphics g) {
-        for (int i = 0; i < animatedStones.size(); i++) {
-            try {
-                animatedStones.get(i).draw(g);
-            } catch (ConcurrentModificationException ex){
-                System.out.println("Caught");
-                i--;
-                continue;
-            }
+        Iterator<AnimatedStone> iterator = animatedStones.iterator();
+
+        while (iterator.hasNext()) {
+            AnimatedStone stone = iterator.next();
+            stone.draw(g);
         }
     }
 
