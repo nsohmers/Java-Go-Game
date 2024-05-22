@@ -24,6 +24,8 @@ public class Board {
     // Meaning that the board can never repeat itself
     private static ArrayList<Integer> previousBoards;
 
+    private static Stone last;
+
     public Board(int boardHeight, int boardWidth) {
         grid = new Point[boardHeight][boardWidth];
 
@@ -68,6 +70,9 @@ public class Board {
 
         return false;
     }
+    public Stone getLast() {
+        return last;
+    }
 
     // Returns all current Stones
     public ArrayList<Stone> getStones() {
@@ -76,10 +81,9 @@ public class Board {
         return result;
     }
 
-    // used to ensure Ko rule
     // returns a hashmap with points as keys
     // and stone colors as values
-    private HashMap<Point, StoneColor> getPointColor() {
+    public HashMap<Point, StoneColor> getPointColor() {
         HashMap<Point, StoneColor> result = new HashMap<Point, StoneColor>();
 
         for (Stone stone : getStones()) {
@@ -191,16 +195,21 @@ public class Board {
         // increment the current turn by one
         currentTurn++;
 
+        last = stone;
+
         return true;
     }
 
-    public void updateStones() {
+    public boolean updateStones() {
+        boolean removed = false;
+
         // Loop through every group
         for (int i = 0; i < groups.size(); i++) {
             Group group = groups.get(i);
 
             // Check if the group has zero liberties
             if (group.getNumLiberties() == 0) {
+                removed = true;
                 // if it does then loop through its stones
                 // and set their corresponding points to null
                 for (Stone stone : group.getStones()) {
@@ -212,6 +221,8 @@ public class Board {
                 i--;
             }
         }
+
+        return removed;
     }
 
     // used to create an array list of territories
@@ -276,5 +287,20 @@ public class Board {
         }
 
         return counter;
+    }
+
+    public TerritoryType calculateWinner() {
+        int black = getTeamScore(StoneColor.BLACK);
+        int white = getTeamScore(StoneColor.WHITE);
+
+        if (black == white) {
+            return TerritoryType.NEUTRAL;
+        }
+
+        if (black > white) {
+            return TerritoryType.BLACK;
+        }
+
+        return TerritoryType.WHITE;
     }
 }
