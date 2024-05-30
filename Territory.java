@@ -69,4 +69,8 @@ public class Territory {
     public int getNumPoints() {
         return occupiedPoints.size();
     }
+
+    public ArrayList<Point> getPoints() {
+        return occupiedPoints;
+    }
 }

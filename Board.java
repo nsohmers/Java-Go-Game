@@ -47,6 +47,10 @@ public class Board {
         return currentTurn;
     }
 
+    public void pass() {
+        currentTurn++;
+    }
+
     public Point[][] getGrid() {
         return grid;
     }
@@ -88,6 +92,22 @@ public class Board {
 
         for (Stone stone : getStones()) {
             result.put(stone.getPoint(grid), stone.getColor());
+        }
+
+        return result;
+    }
+
+    public HashMap<Point, StoneColor> getTerritoriesPointColor() {
+        HashMap<Point, StoneColor> result = new HashMap<Point, StoneColor>();
+
+        for (Territory territory : getTerritories()) {
+            for (Point point : territory.getPoints()) {
+                if (territory.getType() == TerritoryType.BLACK) {
+                    result.put(point, StoneColor.BLACK);
+                } else if (territory.getType() == TerritoryType.WHITE) {
+                    result.put(point, StoneColor.WHITE);
+                }
+            }
         }
 
         return result;

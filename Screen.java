@@ -1,124 +1,95 @@
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.BasicStroke;
-import java.awt.RadialGradientPaint;
-import java.awt.GradientPaint;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import java.util.Map.Entry;
 import java.awt.geom.Point2D;
-import java.awt.geom.Ellipse2D;
-
-import java.awt.image.BufferedImage;
-
-import java.awt.event.MouseListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.Iterator;
-
-import java.io.File;
-
-import java.awt.image.ConvolveOp;
-import java.awt.image.Kernel;
-
 public class Screen extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
 
     private enum GameState {
-        INTRO,
-        START,
-        PLAY,
-        END
+        INTRO, START, PLAY, END
     }
 
     private static Board board;
-
     private static GameState state = GameState.INTRO;
 
     private static final int gameWidth = 1000;
     private static final int gameHeight = 1000;
 
-    private static int NUMROWS = 9;
-    private static int NUMCOLS = 9;
+    private static final int NUMROWS = 9;
+    private static final int NUMCOLS = 9;
 
-    private static int leftMargin = 188;
-    private static int rightMargin = 188;
-    private static int topMargin = 188 + 20;
-    private static int bottomMargin = 188 - 20;
+    private static final int leftMargin = 188;
+    private static final int rightMargin = 188;
+    private static final int topMargin = 188;
+    private static final int bottomMargin = 188;
 
-    private static BasicStroke lineStroke = new BasicStroke(5.5f);
+    private static final BasicStroke lineStroke = new BasicStroke(5.5f);
 
     private static final int rowGap = (gameWidth - leftMargin - rightMargin) / (NUMROWS - 1);
     private static final int colGap = (gameHeight - topMargin - bottomMargin) / (NUMCOLS - 1);
 
     private static final int extraPadding = 30;
+
     private static final Color boardColor = new Color(220, 179, 92);
-
-    private static TerritoryType winner = TerritoryType.UNKNOWN;
-
-    private static int time = 0;
-
-    private static GameText GText, OText, clickStartText, blackTurn, whiteTurn;
-
-    private static ArrayList<GameText> texts;
-    private static ArrayList<AnimatedStone> animatedStones;
-
     private static final Color outerBoardColor = new Color(137, 87, 55);
 
-    private static final Color blackStone = new Color(12, 14, 25);
-    private static final Color whiteStone = new Color(238, 231, 231);
+    private static TerritoryType winner = TerritoryType.UNKNOWN;
+    private static int time = 0;
+    private static boolean passed = false, resigned = false;
+
+    private static GameText GText, OText, clickStartText, blackTurn, whiteTurn, blackPassed, whitePassed, blackWon, whiteWon, tie, whiteScore, blackScore;
+    private static AnimatedButton passButton, resignButton, playAgainButton;
+    private static ArrayList<GameText> texts;
+    private static ArrayList<AnimatedButton> buttons;
+    private static ArrayList<AnimatedStone> animatedStones;
 
     public Screen() {
         board = new Board(NUMROWS, NUMCOLS);
-
-        texts = new ArrayList<GameText>();
-        animatedStones = new ArrayList<AnimatedStone>();
+        texts = new ArrayList<>();
+        buttons = new ArrayList<>();
+        animatedStones = new ArrayList<>();
 
         Color black = AnimatedStone.blackStone;
         Color white = AnimatedStone.whiteStone;
+        Color tieColor = new Color(203, 192, 173);
 
-        GText = new GameText("G", (gameHeight / 2), 400f, black, this, false);
+        GText = new GameText("G", (gameHeight / 2), 400f, black, this, false, false);
         OText = new GameText("O", (gameWidth / 2), (gameHeight / 2), 400f, white, this);
-        clickStartText = new GameText("click to start game", topMargin + 725, 100f, black, this, true);
+        clickStartText = new GameText("click to start game", topMargin + 725, 100f, black, this, true, false);
+        blackTurn = new GameText("black turn", 100, 90f, black, this, true, true);
+        whiteTurn = new GameText("white turn", 100, 90f, white, this, true, true);
+        blackPassed = new GameText("black passed", 100, 90f, white, this, true, true);
+        whitePassed = new GameText("white passed", 100, 90f, black, this, true, true);
+        blackWon = new GameText("black won", 100, 90f, black, this, true, true);
+        whiteWon = new GameText("white won", 100, 90f, white, this, true, true);
+        tie = new GameText("tie", 100, 90f, tieColor, this, true, true);
+        blackScore = new GameText("black score: " + 0, leftMargin - 2 * extraPadding, gameHeight - bottomMargin + 2 * extraPadding + 50, 60f, AnimatedStone.blackStone, this);
+        whiteScore = new GameText("white score: " + 0, leftMargin - 2 * extraPadding, gameHeight - bottomMargin + 2 * extraPadding + blackScore.getMaxTextHeight() + 45, 60f, AnimatedStone.whiteStone, this);
 
-        blackTurn = new GameText("black turn", 100, 90f, black, this, true);
-        whiteTurn = new GameText("white turn", 100, 90f, white, this, true);
+        texts.addAll(Arrays.asList(GText, OText, clickStartText, blackTurn, whiteTurn, blackPassed, whitePassed, blackWon, whiteWon, tie, blackScore, whiteScore));
 
-        texts.add(GText);
-        texts.add(OText);
-        texts.add(clickStartText);
-        texts.add(blackTurn);
-        texts.add(whiteTurn);
+        int center = gameWidth / 2;
+        passButton = new AnimatedButton("pass", (center - 200 - 20), 895, 200, 80, 15, true, this);
+        resignButton = new AnimatedButton("resign", (center + 20), 895, 200, 80, 15, true, this);
+        playAgainButton = new AnimatedButton("play again", gameWidth - rightMargin - 300 + extraPadding * 2 + 30, 895, 280, 80, 15, true, this);
+
+        buttons.addAll(Arrays.asList(passButton, resignButton, playAgainButton));
 
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
     }
 
-	public Dimension getPreferredSize() {
-		return new Dimension(gameWidth, gameHeight);
-	}
+    public Dimension getPreferredSize() {
+        return new Dimension(gameWidth, gameHeight);
+    }
 
     private void hideAll() {
-        for (GameText text : texts) {
-            text.hide();
-        }
+        texts.forEach(GameText::hide);
+        buttons.forEach(AnimatedButton::hide);
     }
 
     private void drawBoard(Graphics g) {
-
         Graphics2D g2d = (Graphics2D) g;
         int width = gameWidth;
         int height = gameHeight;
@@ -132,25 +103,19 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
         g2d.fillRect(0, 0, width, height);
 
         g.setColor(boardColor);
-
         g.fillRect(leftMargin - (colGap / 2) - (extraPadding / 2), topMargin - (rowGap / 2) - (extraPadding / 2), (gameWidth - rightMargin - leftMargin) + colGap + extraPadding, (gameHeight - topMargin - bottomMargin) + rowGap + extraPadding);
 
         g.setColor(Color.BLACK);
-
-        Graphics2D g2 = (Graphics2D) g;
-
-        g2.setStroke(lineStroke);
+        g2d.setStroke(lineStroke);
 
         for (int i = 0; i < NUMROWS; i++) {
             int rowY = topMargin + (rowGap) * i;
-
-            g2.drawLine(leftMargin, rowY, gameWidth - rightMargin, rowY);
+            g2d.drawLine(leftMargin, rowY, gameWidth - rightMargin, rowY);
         }
 
         for (int i = 0; i < NUMCOLS; i++) {
             int colX = leftMargin + (colGap) * i;
-
-            g2.drawLine(colX, topMargin, colX, gameHeight - bottomMargin);
+            g2d.drawLine(colX, topMargin, colX, gameHeight - bottomMargin);
         }
     }
 
@@ -166,6 +131,21 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
     private void drawStones(Graphics g) {
         for (int i = 0; i < animatedStones.size(); i++) {
             animatedStones.get(i).draw(g);
+        }
+    }
+
+    private void drawTerritories(Graphics g) {
+        Color black = AnimatedStone.blackStone;
+        Color white = AnimatedStone.whiteStone;
+
+        for (Entry<Point, StoneColor> entry : board.getTerritoriesPointColor().entrySet()) {
+            Point point = entry.getKey();
+            g.setColor((entry.getValue() == StoneColor.BLACK) ? black : white);
+            int width = colGap / 2 - 10;
+            int height = rowGap / 2 - 10;
+            int x = (leftMargin + colGap * point.getCol()) - width / 2;
+            int y = (topMargin + rowGap * point.getRow()) - height / 2;
+            g.fillRect(x, y, width, height);
         }
     }
 
@@ -187,20 +167,35 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
         }
     }
 
-	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
+    private void updateWinner() {
+        if (resigned) {
+            winner = (board.currentColor() == StoneColor.BLACK) ? TerritoryType.WHITE : TerritoryType.BLACK;
+        } else {
+            winner = board.calculateWinner();
+        }
+    }
+
+    private void endGameAction() {
+        state = GameState.END;
+        hideAll();
+        updateWinner();
+        blackScore.setText("black score: " + board.getTeamScore(StoneColor.BLACK));
+        whiteScore.setText("white score: " + board.getTeamScore(StoneColor.WHITE));
+        blackScore.show();
+        whiteScore.show();
+    }
+
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
 
         switch (state) {
             case INTRO:
                 Graphics2D g2d = (Graphics2D) g;
                 int width = gameWidth;
                 int height = gameHeight;
-
                 Color startColor = outerBoardColor.brighter();
                 Color endColor = boardColor;
-
                 GradientPaint gradient = new GradientPaint(0, 0, startColor, 0, height, endColor);
-
                 g2d.setPaint(gradient);
                 g2d.fillRect(0, 0, width, height);
                 drawStones(g);
@@ -214,63 +209,156 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
                 drawStones(g);
                 break;
             case END:
+                drawBoard(g);
+                drawStones(g);
+                drawTerritories(g);
                 break;
         }
 
-        for (GameText text : texts) {
-            text.draw(g);
+        texts.forEach(text -> text.draw(g));
+        buttons.forEach(button -> button.draw(g));
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        int x = e.getX();
+        int y = e.getY();
+
+        switch (state) {
+            case INTRO:
+                state = GameState.PLAY;
+                animatedStones.clear();
+                hideAll();
+                return;
+            case START:
+                state = GameState.PLAY;
+                return;
+            case PLAY:
+                break;
+            case END:
+                if (playAgainButton.mouseTouching(x, y)) {
+                    state = GameState.INTRO;
+                    passed = false;
+                    resigned = false;
+                    board = new Board(NUMROWS, NUMCOLS);
+                    hideAll();
+                }
+                return;
+        }
+
+        if (passButton.mouseTouching(x, y)) {
+            if (!passed) {
+                passed = true;
+                board.pass();
+            } else {
+                endGameAction();
+                return;
+            }
+        } else {
+            passed = false;
+        }
+
+        if (!resigned && resignButton.mouseTouching(x, y)) {
+            resigned = true;
+            endGameAction();
+            return;
+        }
+
+        int row = (((y - topMargin) + (rowGap / 2)) / rowGap);
+        int col = (((x - leftMargin) + (colGap / 2)) / colGap);
+
+        if (row < 0 || row > NUMROWS - 1 || col < 0 || col > NUMCOLS - 1) return;
+
+        if (board.addStone(row, col)) {
+            animatedStones.add(new AnimatedStone(board.getLast(), leftMargin, topMargin, colGap, rowGap));
+            if (board.updateStones()) {
+                ArrayList<Point> keys = new ArrayList<>(board.getPointColor().keySet());
+                updateStones(keys);
+            }
+        }
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        int x = e.getX();
+        int y = e.getY();
+        passButton.mouseTouching(x, y);
+        resignButton.mouseTouching(x, y);
+        playAgainButton.mouseTouching(x, y);
+    }
+
+    public void animate() {
+        while (true) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+
+            texts.stream().filter(text -> !text.hidden()).forEach(GameText::update);
+
+            switch (state) {
+                case INTRO:
+                    GText.show();
+                    OText.show();
+                    clickStartText.show();
+                    if (time >= 80) fallStones();
+                    break;
+                case START:
+                    break;
+                case PLAY:
+                    passButton.show();
+                    resignButton.show();
+                    if (!passed) {
+                        blackPassed.hide();
+                        whitePassed.hide();
+                        if (board.currentColor() == StoneColor.BLACK) {
+                            whiteTurn.hide();
+                            blackTurn.show();
+                        } else {
+                            blackTurn.hide();
+                            whiteTurn.show();
+                        }
+                    } else {
+                        if (board.currentColor() == StoneColor.BLACK) {
+                            whiteTurn.hide();
+                            blackTurn.hide();
+                            whitePassed.show();
+                        } else {
+                            blackTurn.hide();
+                            whiteTurn.hide();
+                            blackPassed.show();
+                        }
+                    }
+                    break;
+                case END:
+                    playAgainButton.show();
+                    blackScore.show();
+                    whiteScore.show();
+
+                    switch (winner) {
+                        case BLACK:
+                            blackWon.show();
+                            break;
+                        case WHITE:
+                            whiteWon.show();
+                            break;
+                        case NEUTRAL:
+                            tie.show();
+                            break;
+                        case UNKNOWN:
+                            break;
+                    }
+                    break;
+            }
+
+            repaint();
+            time++;
         }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {}
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        switch (state) {
-            case INTRO:
-                state = GameState.START;
-                return;
-
-            case START:
-                state = GameState.PLAY;
-                return;
-
-            case PLAY:
-                break;
-
-            case END:
-                return;
-        }
-
-        int x = e.getX();
-        int y = e.getY();
-
-        int row = (((y - topMargin) + (rowGap / 2)) / rowGap);
-        int col = (((x - leftMargin) + (colGap / 2)) / colGap);
-
-        if (row < 0)
-            return;
-        else if (row > NUMROWS - 1)
-            return;
-
-        if (col < 0)
-            return;
-        else if (col > NUMCOLS - 1)
-            return;
-
-        if (board.addStone(row, col)) {
-            animatedStones.add(new AnimatedStone(board.getLast(), leftMargin, topMargin, colGap, rowGap));
-            if (board.updateStones()) {
-                ArrayList<Point> keys = new ArrayList<Point>(board.getPointColor().keySet()); 
-                updateStones(keys);
-            }
-            repaint();
-        }
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {}
 
     @Override
     public void mouseDragged(MouseEvent e) {}
@@ -286,49 +374,4 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
 
     @Override
     public void mouseClicked(MouseEvent e) {}
-
-    public void animate() {
-        while (true) {
-            try {
-                Thread.sleep(10);
-            } catch ( InterruptedException ex ) {
-                Thread.currentThread().interrupt();
-            }
-
-            for (GameText text : texts) {
-                if (!text.hidden())
-                    text.update();
-            }
-
-            switch (state) {
-            case INTRO:
-                GText.show();
-                OText.show();
-                clickStartText.show();
-                if (time >= 80)
-                    fallStones();
-                    repaint();
-                break;
-            case START:
-                animatedStones.clear();
-                hideAll();
-                break;
-            case PLAY:
-                if (board.currentColor() == StoneColor.BLACK) {
-                    whiteTurn.hide();
-                    blackTurn.show();
-                } else {
-                    blackTurn.hide();
-                    whiteTurn.show();
-                }
-                break;
-            case END:
-                break;
-            }
-
-            repaint();
-
-            time++;
-        }
-    }
 }

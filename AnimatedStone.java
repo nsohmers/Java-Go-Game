@@ -15,9 +15,9 @@ public class AnimatedStone {
     public static final Color blackStone = new Color(12, 14, 25);
     public static final Color whiteStone = new Color(228, 221, 221);
 
-    private static final float p0 = 0.2f;
-    private static final float p1 = 0.01f;
-    private static final float p2 = 0.3f;
+    private static final float p0 = 15f;
+    private static final float p1 = -10f;
+    private static final float p2 = 30f;
     private static final float p3 = 0f;
 
     public AnimatedStone(int x, int y, int width, int height) {
@@ -47,9 +47,8 @@ public class AnimatedStone {
             double t = size / width; 
             double scaleFactor = bezierCurve(t, p0, p1, p2, p3);
 
-            size = (float) (size + scaleFactor);
+            size += (float) (scaleFactor);
 
-            size += 10;
             if (size >= width) {
                 size = width;
                 animating = false;
