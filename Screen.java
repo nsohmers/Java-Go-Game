@@ -4,11 +4,11 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.Map.Entry;
 import java.awt.geom.Point2D;
-
+import java.io.File;
 public class Screen extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
 
     private enum GameState {
-        INTRO, START, PLAY, END
+        INTRO, PLAY, INSTRUCTIONS, END
     }
 
     private static Board board;
@@ -40,7 +40,7 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
     private static boolean passed = false, resigned = false;
 
     private static GameText GText, OText, clickStartText, blackTurn, whiteTurn, blackPassed, whitePassed, blackWon, whiteWon, tie, whiteScore, blackScore;
-    private static AnimatedButton passButton, resignButton, playAgainButton;
+    private static AnimatedButton passButton, resignButton, playAgainButton, instructionButton;
     private static ArrayList<GameText> texts;
     private static ArrayList<AnimatedButton> buttons;
     private static ArrayList<AnimatedStone> animatedStones;
@@ -49,6 +49,7 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
 
     private boolean fading = false;
     private int transparency = 0;
+    private Font instructionFont;
 
     public Screen() {
         board = new Board(NUMROWS, NUMCOLS);
@@ -79,11 +80,18 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
         passButton = new AnimatedButton("pass", (center - 200 - 20), 895, 200, 80, 15, true, this);
         resignButton = new AnimatedButton("resign", (center + 20), 895, 200, 80, 15, true, this);
         playAgainButton = new AnimatedButton("play again", gameWidth - rightMargin - 300 + extraPadding * 2 + 30, 895, 280, 80, 15, true, this);
+        instructionButton = new AnimatedButton("instructions", gameWidth - 200 - 10, gameHeight - 60 - 10, 200, 60, 15, true, this);
 
-        buttons.addAll(Arrays.asList(passButton, resignButton, playAgainButton));
+        buttons.addAll(Arrays.asList(passButton, resignButton, playAgainButton, instructionButton));
 
         audioplayer = new Audioplayer();
         audioplayer.playGameMusic();
+
+        try {
+            instructionFont = Font.createFont(Font.TRUETYPE_FONT, new File("fonts/gameFont.ttf")).deriveFont(20f);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
@@ -213,25 +221,87 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        int width, height;
+        Color startColor, endColor;
+        GradientPaint gradient;
+        Graphics2D g2d;
         switch (state) {
             case INTRO:
-                Graphics2D g2d = (Graphics2D) g;
-                int width = gameWidth;
-                int height = gameHeight;
-                Color startColor = outerBoardColor.brighter();
-                Color endColor = boardColor;
-                GradientPaint gradient = new GradientPaint(0, 0, startColor, 0, height, endColor);
+                g2d = (Graphics2D) g;
+                width = gameWidth;
+                height = gameHeight;
+                startColor = outerBoardColor.brighter();
+                endColor = boardColor;
+                gradient = new GradientPaint(0, 0, startColor, 0, height, endColor);
                 g2d.setPaint(gradient);
                 g2d.fillRect(0, 0, width, height);
                 drawStones(g);
                 break;
-            case START:
-                g.setColor(boardColor);
-                g.fillRect(0, 0, gameWidth, gameHeight);
-                break;
             case PLAY:
                 drawBoard(g);
                 drawStones(g);
+                break;
+            case INSTRUCTIONS:
+                g2d = (Graphics2D) g;
+                width = gameWidth;
+                height = gameHeight;
+                startColor = outerBoardColor.brighter();
+                endColor = boardColor;
+                gradient = new GradientPaint(0, 0, startColor, 0, height, endColor);
+                g2d.setPaint(gradient);
+                g2d.fillRect(0, 0, width, height);
+                g.setColor(AnimatedStone.blackStone);
+                g.setFont(instructionFont);
+
+                String[] instructions = {
+                    "--Tromp-Taylor Rules for Go--",
+                    "",
+                    "Gameplay:",
+                    "Two players: one with black stones, one with white stones.",
+                    "",
+                    "Turns:",
+                    "Players alternate turns, starting with black.",
+                    "On a player's turn, they may place one of their stones on an empty intersection.",
+                    "",
+                    "Groups and Liberties:",
+                    "A group of stones is a connected set of stones of the same color.",
+                    "A stone or group of stones has liberties, which are the empty intersections",
+                    "directly adjacent to them.",
+                    "",
+                    "Capture:",
+                    "If a stone or group of stones has no liberties after",
+                    "an opponent's move, it is captured and removed from the board.",
+                    "",
+                    "Ko Rule:",
+                    "A player may not make a move that returns the game to the previous board position.",
+                    "",
+                    "Suicide:",
+                    "Placing a stone such that it or a group of stones of the same color",
+                    "would have no liberties is illegal unless it captures opposing stones in the process.",
+                    "",
+                    "End of Game:",
+                    "The game ends when both players pass consecutively.",
+                    "",
+                    "Scoring:",
+                    "",
+                    "Territory: Empty intersections surrounded by a player's stones are",
+                    "counted as their territory.",
+                    "",
+                    "Active Stones:",
+                    "Stones that remain on the board at the end of the game",
+                    "are counted as active stones.",
+                    "",
+                    "The player with the most combined territory and active stones wins.",
+                    "",
+                    "Click to Continue",
+                };
+
+                int y = 50;
+                for (String line : instructions) {
+                    int x = 10;
+                    g2d.drawString(line, x, y);
+                    y += this.getFontMetrics(instructionFont).getHeight();
+                }
                 break;
             case END:
                 drawBoard(g);
@@ -263,11 +333,14 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
                 animatedStones.clear();
                 hideAll();
                 return;
-            case START:
-                state = GameState.PLAY;
-                return;
             case PLAY:
                 break;
+            case INSTRUCTIONS:
+                audioplayer.playWhoosh();
+                transparency = 255;
+                fading = true;
+                state = GameState.PLAY;
+                return;
             case END:
                 if (playAgainButton.mouseTouching(x, y)) {
                     passed = false;
@@ -283,9 +356,18 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
                 return;
         }
 
+        if (instructionButton.mouseTouching(x, y)) {
+            state = GameState.INSTRUCTIONS;
+            audioplayer.playWhoosh();
+            transparency = 255;
+            fading = true;
+            hideAll();
+        }
+
         if (passButton.mouseTouching(x, y)) {
             if (!passed) {
                 passed = true;
+                board.pass();
             } else {
                 endGameAction();
                 return;
@@ -323,6 +405,7 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
         passButton.mouseTouching(x, y);
         resignButton.mouseTouching(x, y);
         playAgainButton.mouseTouching(x, y);
+        instructionButton.mouseTouching(x, y);
     }
 
     public void animate() {
@@ -342,11 +425,10 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
                     clickStartText.show();
                     if (time >= 80) fallStones();
                     break;
-                case START:
-                    break;
                 case PLAY:
                     passButton.show();
                     resignButton.show();
+                    instructionButton.show();
                     if (!passed) {
                         blackPassed.hide();
                         whitePassed.hide();
@@ -368,6 +450,8 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
                             blackPassed.show();
                         }
                     }
+                    break;
+                case INSTRUCTIONS:
                     break;
                 case END:
                     playAgainButton.show();
