@@ -5,26 +5,26 @@ import java.util.Objects;
 public class Board {
     // This is the grid representing the board in Go
     // each point represent a row and col on the grid
-    private static Point[][] grid;
+    private Point[][] grid;
 
     // this is used to access stones at a given point
-    private static HashMap<Point, Stone> stonePool;
+    private HashMap<Point, Stone> stonePool;
 
     // The current turn is the current turn the game is on
     // when turn = 1, the game has just started
     // this will increment every move.
-    private static int currentTurn = 1;
+    private int currentTurn = 1;
 
     // This will represent every group of stones
     // a lone stone is still considered a group
     // adjacent stones are in the same group
-    private static ArrayList<Group> groups;
+    private ArrayList<Group> groups;
 
     // Hash codes used to ensure Super Ko rule
     // Meaning that the board can never repeat itself
-    private static ArrayList<Integer> previousBoards;
+    private ArrayList<Integer> previousBoards;
 
-    private static Stone last;
+    private Stone last;
 
     public Board(int boardHeight, int boardWidth) {
         grid = new Point[boardHeight][boardWidth];

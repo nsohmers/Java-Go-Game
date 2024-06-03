@@ -4,6 +4,7 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.Map.Entry;
 import java.awt.geom.Point2D;
+
 public class Screen extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
 
     private enum GameState {
@@ -44,6 +45,11 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
     private static ArrayList<AnimatedButton> buttons;
     private static ArrayList<AnimatedStone> animatedStones;
 
+    private static Audioplayer audioplayer;
+
+    private boolean fading = false;
+    private int transparency = 0;
+
     public Screen() {
         board = new Board(NUMROWS, NUMCOLS);
         texts = new ArrayList<>();
@@ -76,8 +82,12 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
 
         buttons.addAll(Arrays.asList(passButton, resignButton, playAgainButton));
 
+        audioplayer = new Audioplayer();
+        audioplayer.playGameMusic();
+
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
+
     }
 
     public Dimension getPreferredSize() {
@@ -177,12 +187,27 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
 
     private void endGameAction() {
         state = GameState.END;
-        hideAll();
         updateWinner();
+        hideAll();
         blackScore.setText("black score: " + board.getTeamScore(StoneColor.BLACK));
         whiteScore.setText("white score: " + board.getTeamScore(StoneColor.WHITE));
         blackScore.show();
         whiteScore.show();
+    }
+
+    private void fade() {
+        int decreasing = 4;
+        if (fading) {
+            if ((transparency - decreasing) >= 0) {
+                transparency -= decreasing;
+            } else {
+                fading = false;
+            }
+        } else if ((transparency + decreasing) <= 255) {
+            transparency += decreasing;
+        } else {
+            transparency = 255; // Reset transparency to 255 when it reaches above 255
+        }
     }
 
     public void paintComponent(Graphics g) {
@@ -217,6 +242,10 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
 
         texts.forEach(text -> text.draw(g));
         buttons.forEach(button -> button.draw(g));
+
+        new Thread(() -> fade()).start();
+        g.setColor(new Color(0, 0, 0, transparency));
+        if (fading) g.fillRect(0, 0, gameWidth, gameHeight);
     }
 
     @Override
@@ -226,6 +255,10 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
 
         switch (state) {
             case INTRO:
+                audioplayer.playWhoosh();
+                audioplayer.stopGameMusic();
+                transparency = 255;
+                fading = true;
                 state = GameState.PLAY;
                 animatedStones.clear();
                 hideAll();
@@ -237,10 +270,14 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
                 break;
             case END:
                 if (playAgainButton.mouseTouching(x, y)) {
-                    state = GameState.INTRO;
                     passed = false;
                     resigned = false;
                     board = new Board(NUMROWS, NUMCOLS);
+                    state = GameState.INTRO;
+                    audioplayer.playWhoosh();
+                    audioplayer.playGameMusic();
+                    transparency = 255;
+                    fading = true;
                     hideAll();
                 }
                 return;
@@ -249,7 +286,6 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
         if (passButton.mouseTouching(x, y)) {
             if (!passed) {
                 passed = true;
-                board.pass();
             } else {
                 endGameAction();
                 return;
@@ -270,8 +306,10 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
         if (row < 0 || row > NUMROWS - 1 || col < 0 || col > NUMCOLS - 1) return;
 
         if (board.addStone(row, col)) {
+            audioplayer.playPlop();
             animatedStones.add(new AnimatedStone(board.getLast(), leftMargin, topMargin, colGap, rowGap));
             if (board.updateStones()) {
+                audioplayer.playRemove();
                 ArrayList<Point> keys = new ArrayList<>(board.getPointColor().keySet());
                 updateStones(keys);
             }
@@ -356,6 +394,7 @@ public class Screen extends JPanel implements ActionListener, MouseListener, Mou
             time++;
         }
     }
+
 
     @Override
     public void actionPerformed(ActionEvent e) {}
