@@ -1,18 +1,18 @@
 import javax.swing.JFrame;
 
-public class Runner{
-	public static void main(String[] args){
-		JFrame fr = new JFrame("Go Project");
-		Screen sc = new Screen();
-		
-		fr.add(sc);
+public class Runner {
+  public static void main(String[] args) {
+    JFrame fr = new JFrame("Go Project");
+    Screen sc = new Screen();
 
-		fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    fr.add(sc);
 
-		fr.pack();
+    fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		fr.setVisible(true);
+    fr.pack();
 
-		sc.animate();
-	}
+    fr.setVisible(true);
+
+    sc.animate();
+  }
 }

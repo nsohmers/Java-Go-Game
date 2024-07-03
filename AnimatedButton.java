@@ -2,96 +2,99 @@ import java.awt.Graphics;
 import java.awt.Color;
 import java.awt.Font;
 import java.io.File;
+
 public class AnimatedButton {
-    private String text;
-    private int x, y, time, width, height, borderRadius;
-    private float size;
-    private boolean animating, hidden;
-    private Color fill, normal, selected, current;
-    private Screen screen;
+  private String text;
+  private int x, y, time, width, height, borderRadius;
+  private float size;
+  private boolean animating, hidden;
+  private Color fill, normal, selected, current;
+  private Screen screen;
 
-    public AnimatedButton(String text, int x, int y, int width, int height, int borderRadius, boolean animating, Screen screen) {
-        this.text = text;
-        this.x = x;
-        this.y = y;
-        this.size = 0f;
-        this.width = width;
-        this.height = height;
-        this.borderRadius = borderRadius;
-        this.animating = animating;
-        this.hidden = true;
-        this.screen = screen;
+  public AnimatedButton(String text, int x, int y, int width, int height, int borderRadius, boolean animating,
+      Screen screen) {
+    this.text = text;
+    this.x = x;
+    this.y = y;
+    this.size = 0f;
+    this.width = width;
+    this.height = height;
+    this.borderRadius = borderRadius;
+    this.animating = animating;
+    this.hidden = true;
+    this.screen = screen;
 
-        normal = new Color(234, 224, 204);
-        fill = new Color(139, 93, 51);
-        selected = new Color(252, 245, 199);
-        current = normal;
-    }
-    
-    public void draw(Graphics g) {
-        if (hidden) return;
+    normal = new Color(234, 224, 204);
+    fill = new Color(139, 93, 51);
+    selected = new Color(252, 245, 199);
+    current = normal;
+  }
 
-        if (animating) {
-            float scaleFactor = 1f;
+  public void draw(Graphics g) {
+    if (hidden)
+      return;
 
-            size += scaleFactor;
+    if (animating) {
+      float scaleFactor = 1f;
 
-            if (size >= width) {
-                size = width;
-                animating = false;
-            }
-        }
+      size += scaleFactor;
 
-        g.setColor(fill);
-        g.fillRoundRect(x, y, width, height, borderRadius, borderRadius);
-
-        g.setColor(current);
-        g.drawRoundRect(x, y, width, height, borderRadius, borderRadius);
-
-        float fontSize = Math.min(width, height) - 30;
-        Font font = getFont(fontSize);
-
-        int stringWidth = screen.getFontMetrics(font).stringWidth(text);
-        int stringHeight = screen.getFontMetrics(font).getHeight();
-
-        int textX = x + (width - stringWidth) / 2;
-        int textY = y + (height + stringHeight) / 2 - screen.getFontMetrics(font).getDescent();
-
-        g.setFont(font);
-        g.drawString(text, textX, textY);
+      if (size >= width) {
+        size = width;
+        animating = false;
+      }
     }
 
-    public boolean mouseTouching(int x, int y) {
-        if (x >= this.x && x <= width + this.x && 
-            y >= this.y && y <= this.y + height) {
-            current = selected;
-            return true;
-        }
+    g.setColor(fill);
+    g.fillRoundRect(x, y, width, height, borderRadius, borderRadius);
 
-        current = normal;
-        return false;
+    g.setColor(current);
+    g.drawRoundRect(x, y, width, height, borderRadius, borderRadius);
+
+    float fontSize = Math.min(width, height) - 30;
+    Font font = getFont(fontSize);
+
+    int stringWidth = screen.getFontMetrics(font).stringWidth(text);
+    int stringHeight = screen.getFontMetrics(font).getHeight();
+
+    int textX = x + (width - stringWidth) / 2;
+    int textY = y + (height + stringHeight) / 2 - screen.getFontMetrics(font).getDescent();
+
+    g.setFont(font);
+    g.drawString(text, textX, textY);
+  }
+
+  public boolean mouseTouching(int x, int y) {
+    if (x >= this.x && x <= width + this.x &&
+        y >= this.y && y <= this.y + height) {
+      current = selected;
+      return true;
     }
 
-    public void hide() {
-        hidden = true;
-    }
+    current = normal;
+    return false;
+  }
 
-    public void show() {
-        if (!hidden)
-            return;
+  public void hide() {
+    hidden = true;
+  }
 
-        hidden = false;
-        time = 0;
-        size = 0f;
-        animating = true;
-    }
+  public void show() {
+    if (!hidden)
+      return;
 
-    public Font getFont(float size) {
-        try {
-            return Font.createFont(Font.TRUETYPE_FONT, new File("fonts/gameFont.ttf")).deriveFont(size);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+    hidden = false;
+    time = 0;
+    size = 0f;
+    animating = true;
+  }
+
+  public Font getFont(float size) {
+    try {
+      return Font.createFont(Font.TRUETYPE_FONT, new File("fonts/gameFont.ttf")).deriveFont(size);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
     }
+  }
 }
